@@ -1,0 +1,11 @@
+# $Id$
+#
+# Macro file for "exampleB3.cc"
+# 
+# can be run in batch, without graphic
+# or interactively: Idle> /control/execute debug.mac
+#
+/tracking/verbose 1
+#
+/gun/particle geantino
+/run/beamOn 1

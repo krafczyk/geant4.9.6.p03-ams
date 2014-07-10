@@ -1,0 +1,25 @@
+# $Id$
+# --------------------------------------------------------------
+# GNUmakefile for examples module.  Gabriele Cosmo, 06/04/98.
+# --------------------------------------------------------------
+
+name := Pol01
+G4TARGET := $(name)
+G4EXLIB := true
+
+ifndef G4INSTALL
+  G4INSTALL = ../../../..
+endif
+
+.PHONY: all
+all: lib bin
+
+include $(G4INSTALL)/config/binmake.gmk
+
+plots:	plotResults.class
+	@echo calling JAIDA ...
+	java -cp .:$(CLASSPATH) plotResults Pol01.aida
+
+plotResults.class: plotResults.java
+	@echo compiling $<
+	javac $<

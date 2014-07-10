@@ -1,0 +1,14 @@
+# $Id$
+#
+# Macro file of "exampleB3.cc"
+#
+/control/verbose 2
+#
+/run/beamOn 40000
+#
+# change beta source
+#
+/gun/particle ion
+/gun/ion 6 11
+#
+/run/beamOn 40000

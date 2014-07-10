@@ -1,0 +1,7 @@
+# $Id$
+#
+# Macro file of "exampleB3.cc"
+#
+/control/verbose 2
+#
+/run/beamOn 10000

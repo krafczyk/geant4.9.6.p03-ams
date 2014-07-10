@@ -1,0 +1,9 @@
+G4GammaXTRadiator.hh
+G4RegularXTRadiator.hh
+G4StrawTubeXTRadiator.hh
+G4TrackTerminator.hh
+G4TransparentRegXTRadiator.hh
+G4VXTRenergyLoss.hh
+G4XTRGammaRadModel.hh
+G4XTRRegularRadModel.hh
+G4XTRTransparentRegRadModel.hh

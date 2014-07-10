@@ -1,0 +1,21 @@
+G4LogicalSkinSurface.hh   Modified to include surface direction functions
+
+G4VPhysicalVolume.hh Modified to allow setting and getting the mother volume
+G4VPhysicalVolume.CC  ass SetMother in constructor
+
+G4ParticleGun.cc          Modified to  allow changing of momentum, energy and particle properties without creating a new instance
+
+G4OpBoundaryProcess.cc    proper handling of boundary procs
+
+G4Exception.cc throw an exception, instead of abort
+./source/global/management/include/ams_g4exception.h   new file
+//G4IonsShenCrossSection.hh upperLimit ( 100 * TeV ),
+./source/geometry/solids/CSG/src/G4Cons.cc GetPointOnSurface bug fix
+./source/geometry/solids/specific/src/G4Polyhedra.cc bug fix
+
+G4HadronicProcess.hh  A BiasCrossSectionByFactor2 to allow change of hadronic cr
+ossection
+G4ProtonBuilder.hh   C private->public
+HadronPhysicsQGSP.hh C private->public
+~
+
