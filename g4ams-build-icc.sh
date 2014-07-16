@@ -27,14 +27,16 @@ select opt in $OPTIONS;do
   fi
 done
 
-mkdir -p  $GINST
+mkdir -p $GINST
 
 fi
 
-if [ -d g4-build ]; then rm -fr g4-build; fi
-mkdir g4-build
+if [ -d g4-build-icc ]; then rm -fr g4-build-icc; fi
+mkdir g4-build-icc
 
-cd g4-build
+cd g4-build-icc
+export CC=icc
+export CXX=icc
 
 cmake -DCMAKE_INSTALL_PREFIX=$GINST  \
 -DCMAKE_BUILD_TYPE=Release \
