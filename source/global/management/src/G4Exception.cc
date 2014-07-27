@@ -81,8 +81,9 @@ void G4Exception(const char* originOfException,
              << ee_banner << G4endl;
       break;
      case EventMustBeAborted:
+        toBeAborted = true;
       G4cerr << es_banner << message.str() << "*** Event Must Be Aborted ***"
-             << ee_banner << G4endl;
+             << ee_banner << " aborted "<<toBeAborted <<G4endl;
       break;
      default:
       G4cout << ws_banner << message.str()
@@ -94,9 +95,10 @@ void G4Exception(const char* originOfException,
   }
   if(toBeAborted)
   {
-   if(G4StateManager::GetStateManager()->SetNewState(G4State_Abort))
+    G4StateManager::GetStateManager()->SetNewState(G4State_Abort);
+   if(1 )
    {
-      G4cerr << G4endl << "*** G4Exception: throwing exception ***" << G4endl;
+      G4cerr <<  "*** G4Exception: throwing exception ***" << G4endl;
      ams_g4exception myexc;
      throw myexc;
  }

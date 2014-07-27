@@ -316,7 +316,7 @@ G4SubtractionSolid::DistanceToIn(  const G4ThreeVector& p,
               message.precision(6);
               DumpInfo();
               G4Exception("G4SubtractionSolid::DistanceToIn(p,v)",
-                          "GeomSolids1001", JustWarning, message,
+                          "GeomSolids1001", (dist?JustWarning:EventMustBeAborted), message,
                           "Returning candidate distance.");
               return dist;
             }
@@ -370,7 +370,7 @@ G4SubtractionSolid::DistanceToIn(  const G4ThreeVector& p,
               message.precision(6);
               DumpInfo();
               G4Exception("G4SubtractionSolid::DistanceToIn(p,v)",
-                          "GeomSolids1001", JustWarning, message);
+                          "GeomSolids1001", (dist?JustWarning:EventMustBeAborted), message);
               return dist;         
 
             }
