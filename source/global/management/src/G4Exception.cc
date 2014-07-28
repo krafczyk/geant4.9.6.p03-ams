@@ -50,6 +50,21 @@ void G4Exception(const char* originOfException,
   {
     toBeAborted = exceptionHandler
      ->Notify(originOfException,exceptionCode,severity,description);
+    switch(severity)
+    {
+     case FatalException:
+      break;
+     case FatalErrorInArgument:
+      break;
+     case RunMustBeAborted:
+     case EventMustBeAborted:
+        toBeAborted = true;
+      break;
+     default:
+      break;
+    }
+
+
   }
   else
   {
