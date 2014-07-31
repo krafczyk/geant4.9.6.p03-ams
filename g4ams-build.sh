@@ -48,11 +48,15 @@ cmake -DCMAKE_INSTALL_PREFIX=$GINST  \
 -DGEANT4_BUILD_STORE_TRAJECTORY=ON \
 -DCMAKE_INSTALL_LIBDIR=lib/geant4/$ARCH/ ../
 
-make -j 
+make -i -j 
 
 make install
 
+
 export CMPDIR=$PWD
+cd ..
+cp -a config $GINST/
+rm -fr $GINST/config/CVS
 cd $GINST/include/
 ln -sf Geant4 geant4
 cd $CMPDIR
