@@ -665,7 +665,7 @@ G4PAIModel::GetPostStepTransfer( G4double scaledTkin )
   // G4cout<<"dNdxCut1 = "<<dNdxCut1<<G4endl ;
 
 
-  if(iTkin == fTotBin) // Fermi plato, try from left
+  if(iTkin - 1 == fTotBin) // Fermi plato, try from left
   {
       position = dNdxCut1*G4UniformRand() ;
 
@@ -680,7 +680,7 @@ G4PAIModel::GetPostStepTransfer( G4double scaledTkin )
   {
     dNdxCut2 = (*fdNdxCutVector)(iPlace+1) ;  
     // G4cout<<"dNdxCut2 = "<<dNdxCut2<<G4endl ;
-    if(iTkin == 0) // Tkin is too small, trying from right only
+    if(iPlace == 0) // Tkin is too small, trying from right only
     {
       position = dNdxCut2*G4UniformRand() ;
 
@@ -812,7 +812,7 @@ G4double G4PAIModel::SampleFluctuations( const G4Material* material,
   dNdxCut1 = (*fdNdxCutVector)(iPlace) ;  
   //G4cout<<"dNdxCut1 = "<<dNdxCut1<<G4endl ;
 
-  if(iTkin == fTotBin) // Fermi plato, try from left
+  if(iTkin - 1 == fTotBin) // Fermi plato, try from left
   {
     meanNumber =((*(*fPAItransferTable)(iPlace))(0)-dNdxCut1)*step*charge2;
     if(meanNumber < 0.) meanNumber = 0. ;
@@ -850,7 +850,7 @@ G4double G4PAIModel::SampleFluctuations( const G4Material* material,
     dNdxCut2 = (*fdNdxCutVector)(iPlace+1) ; 
     //G4cout<<"dNdxCut2 = "<<dNdxCut2<< " iTkin= "<<iTkin<<" iPlace= "<<iPlace<<G4endl;
  
-    if(iTkin == 0) // Tkin is too small, trying from right only
+    if(iPlace== 0) // Tkin is too small, trying from right only
     {
       meanNumber =((*(*fPAItransferTable)(iPlace+1))(0)-dNdxCut2)*step*charge2;
       if( meanNumber < 0. ) meanNumber = 0. ;
