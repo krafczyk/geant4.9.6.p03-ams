@@ -58,6 +58,7 @@ typedef struct
 {
   size_t size;
   G4int totalspace;
+  G4int firstFreeItem;
   G4ChunkType *preAllocated;
 } G4ChunkIndexType;
 
@@ -117,26 +118,37 @@ template<typename _Tp>
 void G4EnhancedVecAllocator<_Tp>::deallocate(_Tp* _Ptr, size_t _Count)
 {
   G4int found = -1;
-  for (register int j = 0 ; j < G4AllocStats::numCat ; j++)
+  if (G4AllocStats::allocStat != 0)
   {
-    if ( (G4AllocStats::allocStat != 0)
-      && (G4AllocStats::allocStat[j].size == (_Count * sizeof(_Tp))))
+    for (G4int j = 0 ; j < G4AllocStats::numCat ; j++)
     {
-      found = j;
-      break;
+      if (G4AllocStats::allocStat[j].size == (_Count * sizeof(_Tp)))
+      {
+        found = j;
+        break;
+      }
     }
   }
   // assert(found != -1);
 
-  for (register int k = 0; k < G4AllocStats::allocStat[found].totalspace; k++)
-  {
-    if ( ((G4AllocStats::allocStat[found]).preAllocated[k]).address
-      == ((char *) _Ptr))
-    {
-   // assert(((G4AllocStats::allocStat[found]).preAllocated[k]).isAllocated==1);
-      ((G4AllocStats::allocStat[found]).preAllocated[k]).isAllocated = 0;
-      return;
+  G4ChunkIndexType& chunk = G4AllocStats::allocStat[found];
+
+  char* p = (char*) _Ptr;
+  unsigned int first = 0;
+  long long k = 0;
+  while (first < (unsigned int) chunk.totalspace) {
+    char* startAddress = chunk.preAllocated[first].address;
+    char* endAddress = chunk.preAllocated[first+511].address;
+    if ( p < startAddress || p > endAddress) {
+      first += 512;
+      continue;
     }
+    size_t gap = (endAddress - startAddress) / 511;
+    k = first + ( p - startAddress ) / gap;
+    (chunk.preAllocated[k]).isAllocated = 0;
+    if (k < chunk.firstFreeItem)
+      chunk.firstFreeItem = k;
+    return;
   }
 }
 
@@ -155,14 +167,16 @@ _Tp* G4EnhancedVecAllocator<_Tp>::allocate(size_t _Count)
   size_t totalsize = _Count * sizeof(_Tp);
 
   G4int found = -1;
-  for (register int j = 0 ; j < G4AllocStats::numCat ; j++)
+  if (G4AllocStats::allocStat != 0)
   {
-    if ( (G4AllocStats::allocStat != 0)
-      && (G4AllocStats::allocStat[j].size == totalsize) )
+    for (G4int j = 0 ; j < G4AllocStats::numCat ; j++)
     {
-      found = j;
-      break;
-    } 
+      if (G4AllocStats::allocStat[j].size == totalsize)
+      {
+        found = j;
+        break;
+      } 
+    }
   }   
 
   if (found == -1)  // Find the new size
@@ -186,74 +200,77 @@ _Tp* G4EnhancedVecAllocator<_Tp>::allocate(size_t _Count)
     G4AllocStats::allocStat[G4AllocStats::numCat-1].preAllocated = 0;
 
     found = G4AllocStats::numCat - 1;
+    G4ChunkIndexType& chunk = G4AllocStats::allocStat[found];
 
-    G4AllocStats::allocStat[found].totalspace = 512;
+    chunk.totalspace = 512;
       // heuristic for the number of STL vector instances
 
-    G4AllocStats::allocStat[found].preAllocated =
-        (G4ChunkType *) realloc(G4AllocStats::allocStat[found].preAllocated,
-          sizeof(G4ChunkType) * G4AllocStats::allocStat[found].totalspace);
+    chunk.preAllocated = (G4ChunkType *) realloc(chunk.preAllocated,
+                         sizeof(G4ChunkType) * chunk.totalspace);
       // This value must be different than zero; otherwise means
       // failure in allocating extra space for pointers !
-    // assert(G4AllocStats::allocStat[found].preAllocated != 0);
+    // assert(chunk.preAllocated != 0);
 
     char *newSpace1 = (char *) malloc(totalsize * 512);
       // This pointer must be different than zero; otherwise means
       // failure in allocating extra space for instances !
     // assert(newSpace1 != 0);
 
-    for (register int k = 0; k < 512 ; k++)
+    for (G4int k = 0; k < 512 ; k++)
     {
-      ((G4AllocStats::allocStat[found]).preAllocated[k]).isAllocated = 0;
-      ((G4AllocStats::allocStat[found]).preAllocated[k]).address =
-                                                    newSpace1+totalsize*k;
+      (chunk.preAllocated[k]).isAllocated = 0;
+      (chunk.preAllocated[k]).address = newSpace1+totalsize*k;
     }
 
-    ((G4AllocStats::allocStat[found]).preAllocated[0]).isAllocated = 1;
-    return (_Tp*)(((G4AllocStats::allocStat[found]).preAllocated[0]).address);
+    (chunk.preAllocated[0]).isAllocated = 1;
+    chunk.firstFreeItem = 1;
+    return (_Tp*)((chunk.preAllocated[0]).address);
   }
 
-  // assert(G4AllocStats::allocStat[found].size == totalsize);
+  G4ChunkIndexType& chunk = G4AllocStats::allocStat[found];
 
-  for (register int k = 0; k < G4AllocStats::allocStat[found].totalspace; k++)
-  {
-    if (((G4AllocStats::allocStat[found]).preAllocated[k]).isAllocated == 0)
-    { 
-      ((G4AllocStats::allocStat[found]).preAllocated[k]).isAllocated = 1;
-      return (_Tp*)(((G4AllocStats::allocStat[found]).preAllocated[k]).address);
+  // assert(chunk.size == totalsize);
+
+  if (chunk.firstFreeItem != chunk.totalspace) {
+    if (chunk.preAllocated[chunk.firstFreeItem].isAllocated == 0) {
+      (chunk.preAllocated[chunk.firstFreeItem]).isAllocated = 1;
+      chunk.firstFreeItem++;
+      return (_Tp*)((chunk.preAllocated[chunk.firstFreeItem-1]).address);
+    }
+    for (G4int k = chunk.firstFreeItem; k < chunk.totalspace; k++) {
+      if ((chunk.preAllocated[k]).isAllocated == 0) {
+        (chunk.preAllocated[k]).isAllocated = 1;
+        chunk.firstFreeItem = k+1;
+        return (_Tp*)((chunk.preAllocated[k]).address);
+      }
     }
   }
 
-  G4int originalchunknumber = G4AllocStats::allocStat[found].totalspace;
+  G4int originalchunknumber = chunk.totalspace;
       
-  G4AllocStats::allocStat[found].totalspace =      // heuristic for the number
-    G4AllocStats::allocStat[found].totalspace+512; // of STL vector instances
+  chunk.totalspace += 512;  // heuristic for the number of STL vector instances
 
-  G4AllocStats::allocStat[found].preAllocated =
-    (G4ChunkType *) realloc(G4AllocStats::allocStat[found].preAllocated,
-      sizeof(G4ChunkType) * G4AllocStats::allocStat[found].totalspace);
+  chunk.preAllocated = (G4ChunkType *) realloc(chunk.preAllocated,
+                       sizeof(G4ChunkType) * chunk.totalspace);
     // This value must be different than zero; otherwise means
     // failure in allocating extra space for pointers !
-  // assert(G4AllocStats::allocStat[found].preAllocated != 0);
+  // assert(chunk.preAllocated != 0);
 
   char *newSpace = (char *) malloc(totalsize * 512);
     // This pointer must be different than zero; otherwise means
     // failure in allocating extra space for instances !
   // assert(newSpace != 0);
 
-  for (register int k = 0; k < 512 ; k++)
+  for (G4int k = 0; k < 512 ; k++)
   {
-    ((G4AllocStats::allocStat[found]).
-      preAllocated[originalchunknumber + k]).isAllocated= 0;
-    ((G4AllocStats::allocStat[found]).
-      preAllocated[originalchunknumber + k]).address= newSpace+totalsize*k;
+    (chunk.preAllocated[originalchunknumber+k]).isAllocated = 0;
+    (chunk.preAllocated[originalchunknumber+k]).address = newSpace+totalsize*k;
   }
 
-  ((G4AllocStats::allocStat[found]).preAllocated[originalchunknumber])
-                                   .isAllocated = 1;
+  (chunk.preAllocated[originalchunknumber]).isAllocated = 1;
+  chunk.firstFreeItem = originalchunknumber+1;
 
-  return (_Tp*)(((G4AllocStats::allocStat[found]).
-                  preAllocated[originalchunknumber]).address);
+  return (_Tp*)((chunk.preAllocated[originalchunknumber]).address);
 }
 
 // ************************************************************
