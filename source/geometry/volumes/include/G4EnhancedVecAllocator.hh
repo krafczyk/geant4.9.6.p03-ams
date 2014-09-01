@@ -50,7 +50,7 @@
 
 typedef struct
 {
-  G4int isAllocated;
+  G4int nextFreeItem; // if == -1: indicates that this chunk is allocated. otherwise points to the next free chunk
   char *address;
 } G4ChunkType;
 
@@ -58,7 +58,7 @@ typedef struct
 {
   size_t size;
   G4int totalspace;
-  G4int firstFreeItem;
+  G4int nextFreeItem; // always points to the next free item or to totalspace if none are free
   G4ChunkType *preAllocated;
 } G4ChunkIndexType;
 
@@ -133,21 +133,35 @@ void G4EnhancedVecAllocator<_Tp>::deallocate(_Tp* _Ptr, size_t _Count)
 
   G4ChunkIndexType& chunk = G4AllocStats::allocStat[found];
 
+  char* startAddress = 0;
+  char* endAddress = 0;
   char* p = (char*) _Ptr;
-  unsigned int first = 0;
-  long long k = 0;
-  while (first < (unsigned int) chunk.totalspace) {
-    char* startAddress = chunk.preAllocated[first].address;
-    char* endAddress = chunk.preAllocated[first+511].address;
-    if ( p < startAddress || p > endAddress) {
+  size_t stride = 0;
+  G4int first = 0;
+  G4int total = chunk.totalspace;
+  G4int k = 0;
+
+  while (first < total) {
+    startAddress = chunk.preAllocated[first].address;
+    if (p < startAddress) {
       first += 512;
       continue;
     }
-    size_t gap = (endAddress - startAddress) / 511;
-    k = first + ( p - startAddress ) / gap;
-    (chunk.preAllocated[k]).isAllocated = 0;
-    if (k < chunk.firstFreeItem)
-      chunk.firstFreeItem = k;
+    endAddress = chunk.preAllocated[first+511].address;
+    if (p > endAddress) {
+      first += 512;
+      continue;
+    }
+
+    stride = (endAddress - startAddress) / 511;
+    k = first + ( p - startAddress ) / stride;
+
+    // avoid circular loop in chain of items
+    if (chunk.preAllocated[k].nextFreeItem >= 0)
+      return;
+
+    chunk.preAllocated[k].nextFreeItem = chunk.nextFreeItem;
+    chunk.nextFreeItem = k;
     return;
   }
 }
@@ -218,32 +232,24 @@ _Tp* G4EnhancedVecAllocator<_Tp>::allocate(size_t _Count)
 
     for (G4int k = 0; k < 512 ; k++)
     {
-      (chunk.preAllocated[k]).isAllocated = 0;
-      (chunk.preAllocated[k]).address = newSpace1+totalsize*k;
+      chunk.preAllocated[k].nextFreeItem = k+1;
+      chunk.preAllocated[k].address = newSpace1+totalsize*k;
     }
 
-    (chunk.preAllocated[0]).isAllocated = 1;
-    chunk.firstFreeItem = 1;
-    return (_Tp*)((chunk.preAllocated[0]).address);
+    chunk.nextFreeItem = chunk.preAllocated[0].nextFreeItem;
+    chunk.preAllocated[0].nextFreeItem = -1;
+    return (_Tp*)(chunk.preAllocated[0].address);
   }
 
   G4ChunkIndexType& chunk = G4AllocStats::allocStat[found];
 
   // assert(chunk.size == totalsize);
 
-  if (chunk.firstFreeItem != chunk.totalspace) {
-    if (chunk.preAllocated[chunk.firstFreeItem].isAllocated == 0) {
-      (chunk.preAllocated[chunk.firstFreeItem]).isAllocated = 1;
-      chunk.firstFreeItem++;
-      return (_Tp*)((chunk.preAllocated[chunk.firstFreeItem-1]).address);
-    }
-    for (G4int k = chunk.firstFreeItem; k < chunk.totalspace; k++) {
-      if ((chunk.preAllocated[k]).isAllocated == 0) {
-        (chunk.preAllocated[k]).isAllocated = 1;
-        chunk.firstFreeItem = k+1;
-        return (_Tp*)((chunk.preAllocated[k]).address);
-      }
-    }
+  if (chunk.nextFreeItem != chunk.totalspace) {
+    G4int index = chunk.nextFreeItem;
+    chunk.nextFreeItem = chunk.preAllocated[index].nextFreeItem;
+    chunk.preAllocated[index].nextFreeItem = -1;
+    return (_Tp*)(chunk.preAllocated[index].address);
   }
 
   G4int originalchunknumber = chunk.totalspace;
@@ -263,14 +269,13 @@ _Tp* G4EnhancedVecAllocator<_Tp>::allocate(size_t _Count)
 
   for (G4int k = 0; k < 512 ; k++)
   {
-    (chunk.preAllocated[originalchunknumber+k]).isAllocated = 0;
-    (chunk.preAllocated[originalchunknumber+k]).address = newSpace+totalsize*k;
+    chunk.preAllocated[originalchunknumber+k].nextFreeItem = originalchunknumber+k+1;
+    chunk.preAllocated[originalchunknumber+k].address = newSpace+totalsize*k;
   }
 
-  (chunk.preAllocated[originalchunknumber]).isAllocated = 1;
-  chunk.firstFreeItem = originalchunknumber+1;
-
-  return (_Tp*)((chunk.preAllocated[originalchunknumber]).address);
+  chunk.nextFreeItem = chunk.preAllocated[originalchunknumber].nextFreeItem;
+  chunk.preAllocated[originalchunknumber].nextFreeItem = -1;
+  return (_Tp*)(chunk.preAllocated[originalchunknumber].address);
 }
 
 // ************************************************************
