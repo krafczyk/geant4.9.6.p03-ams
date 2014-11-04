@@ -36,15 +36,6 @@
 #include "G4NavigationHistory.hh"
 #include "G4ios.hh"
 
-#ifndef WIN32
-  // Initialise static data for the specialized memory pool
-  // for the internal STL vector of histories  ...
-  //
-  G4ChunkIndexType* G4AllocStats::allocStat = 0;
-  G4int             G4AllocStats::totSpace = 0;
-  G4int             G4AllocStats::numCat = 0;
-#endif
-
 G4NavigationHistory::G4NavigationHistory()
   : fNavHistory(kHistoryMax), fStackDepth(0)
 {

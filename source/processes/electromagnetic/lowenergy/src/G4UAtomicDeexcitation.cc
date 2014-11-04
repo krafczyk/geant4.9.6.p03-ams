@@ -96,7 +96,7 @@ G4UAtomicDeexcitation::~G4UAtomicDeexcitation()
 
 void G4UAtomicDeexcitation::InitialiseForNewRun()
 {
-  //if(!IsFluoActive()) { return; } // commented out by T. Raiha
+  if(!IsFluoActive()) { return; }
   transitionManager = G4AtomicTransitionManager::Instance();
   if(IsPIXEActive()) {
     G4cout << G4endl;

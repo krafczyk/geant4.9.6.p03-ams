@@ -36,12 +36,11 @@
 //
 
 #include "G4VXTRenergyLoss.hh"
-
+#include "G4EmProcessSubType.hh"
 #include "G4Timer.hh"
 #include "G4PhysicalConstants.hh"
 #include "G4SystemOfUnits.hh"
 
-#include "G4EmProcessSubType.hh"
 #include "G4Poisson.hh"
 #include "G4MaterialTable.hh"
 #include "G4VDiscreteProcess.hh"
@@ -76,7 +75,9 @@ G4VXTRenergyLoss::G4VXTRenergyLoss(G4Region *anEnvelope,
   fGasPhotoAbsCof(0),
   fAngleForEnergyTable(0)
 {
-  SetProcessSubType(fTransitionRadiation);
+  verboseLevel = 1;
+
+SetProcessSubType(fTransitionRadiation);
 
   verboseLevel = 1;
 

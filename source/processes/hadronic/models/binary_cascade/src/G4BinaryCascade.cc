@@ -2764,7 +2764,7 @@ G4double G4BinaryCascade::GetIonMass(G4int Z, G4int A)
         // all neutral, or empty nucleus
         mass = A * G4Neutron::Neutron()->GetPDGMass();
 
-    } else if ( A == 0 && std::abs(Z)<2 )
+    } else if ( A == 0 && std::abs(Z)<=2 )
     {
         // empty nucleus, except maybe pions
         mass = 0;

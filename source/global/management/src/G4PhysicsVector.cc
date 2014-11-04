@@ -157,7 +157,7 @@ void G4PhysicsVector::CopyData(const G4PhysicsVector& vec)
 
 G4double G4PhysicsVector::GetLowEdgeEnergy(size_t binNumber) const
 {
-  return binVector[binNumber];
+  return binVector.at(binNumber);
 }
 
 // --------------------------------------------------------------

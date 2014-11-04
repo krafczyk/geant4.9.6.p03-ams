@@ -48,7 +48,6 @@
 #include "G4AffineTransform.hh"
 #include "G4VPhysicalVolume.hh"
 #include "G4NavigationLevel.hh"
-#include "G4EnhancedVecAllocator.hh"
 
 #include <vector>
 #include <iostream>
@@ -140,14 +139,7 @@ class G4NavigationHistory
 
  private:
 
-#ifdef WIN32
   std::vector<G4NavigationLevel> fNavHistory;
-#else
-  std::vector<G4NavigationLevel,
-              G4EnhancedVecAllocator<G4NavigationLevel> > fNavHistory;
-    // The geometrical tree; uses specialized allocator to optimize
-    // memory handling and reduce possible fragmentation
-#endif
 
   G4int fStackDepth;
     // Depth of stack: effectively depth in geometrical tree

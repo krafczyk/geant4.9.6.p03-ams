@@ -83,7 +83,7 @@ class HadronPhysicsQGSP_BIC : public G4VPhysicsConstructor
     G4PiKBuilder * thePiK;
     G4LEPPiKBuilder * theLEPPiK;
     G4QGSPPiKBuilder * theQGSPPiK;
-    
+public:    
     G4ProtonBuilder * thePro;
     G4LEPProtonBuilder * theLEPPro;
     G4QGSPProtonBuilder * theQGSPPro; 
