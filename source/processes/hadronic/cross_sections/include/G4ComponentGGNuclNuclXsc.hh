@@ -50,7 +50,6 @@ class G4HadronNucleonXsc;
 class G4ComponentGGNuclNuclXsc : public G4VComponentCrossSection
 {
 public:
-
   G4ComponentGGNuclNuclXsc ();
   virtual ~G4ComponentGGNuclNuclXsc ();
 
@@ -162,11 +161,15 @@ private:
   G4ParticleDefinition* theProton;
   G4ParticleDefinition* theNeutron;
   G4HadronNucleonXsc* hnXsc;
+public:
+void setScale(double fac){ fHadronNucleonXsc=fac;}
 };
 
 ////////////////////////////////////////////////////////////////
 //
 // Inlines
+
+
 
 inline G4double
 G4ComponentGGNuclNuclXsc::GetElasticGlauberGribov(const G4DynamicParticle* dp,
