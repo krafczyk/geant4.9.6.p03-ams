@@ -245,7 +245,7 @@ private:
   std::vector<G4VLeadingParticleBiasing *> theBias;
   
   G4double theInitialNumberOfInteractionLength;   
-
+public:
   G4double aScaleFactor;
   G4bool   xBiasOn;
   G4double theLastCrossSection;
